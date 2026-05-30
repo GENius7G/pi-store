@@ -279,8 +279,8 @@ function doPay() {
     metadata: { productId: currentProduct.id }
   };
   const callbacks = {
-    onReadyForServerApproval: function(paymentId) { console.log('Approve:', paymentId); },
-    onReadyForServerCompletion: function(paymentId, txid) {
+    onReadyForServerApproval: async function(paymentId) { await fetch("/approve", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId})}); },
+    onReadyForServerCompletion: async function(paymentId, txid) { await fetch("/complete", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId,txid})});
       closeModal();
       document.getElementById('successMsg').textContent = 'اشتريت "' + currentProduct.name + '" بنجاح!';
       document.getElementById('mainView').style.display = 'none';
