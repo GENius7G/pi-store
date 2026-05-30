@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GENius Store - Pi Network</title>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #f5f0ff; color: #333; }
+header {
+  background: #6c3fc5;
+  color: white;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header h1 { font-size: 20px; }
+#balance-box {
+  background: rgba(255,255,255,0.2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  text-align: center;
+}
+#balance-box strong { display: block; font-size: 18px; }
+.tabs {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #e0d9f7;
+  padding: 0 1rem;
+  gap: 4px;
+}
+.tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: #888;
+  border-bottom: 2px solid transparent;
+}
+.tab.active { color: #6c3fc5; border-bottom-color: #6c3fc5; font-weight: bold; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 1rem;
+}
+.card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e0d9f7;
+  cursor: pointer;
+}
+.card:hover { border-color: #6c3fc5; }
+.thumb {
+  height: 90px;
+  background: #f5f0ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+}
+.card-body { padding: 10px; }
+.card-name { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+.card-desc { font-size: 12px; color: #888; margin-bottom: 8px; line-height: 1.4; }
+.card-footer { display: flex; justify-content: space-between; align-items: center; }
+.price { color: #6c3fc5; font-weight: bold; font-size: 15px; }
+.btn-buy {
+  background: #6c3fc5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.btn-buy:active { opacity: 0.8; }
+.badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  margin-right: 4px;
+}
+.badge-new { background: #faeeda; color: #633806; }
+.badge-hot { background: #fcebeb; color: #791f1f; }
+.modal-bg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 300px;
+  text-align: center;
+}
+.modal-icon { font-size: 40px; margin-bottom: 10px; }
+.modal-name { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
+.modal-desc { font-size: 13px; color: #888; margin-bottom: 1rem; }
+.modal-price {
+  background: #f5f0ff;
+  color: #4a2a8a;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+.modal-price span { font-size: 12px; display: block; color: #6c3fc5; margin-top: 2px; }
+.modal-btns { display: flex; gap: 8px; }
+.btn-cancel {
+  flex: 1; padding: 10px;
+  border: 1px solid #ddd;
+  background: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-confirm {
+  flex: 2; padding: 10px;
+  background: #6c3fc5;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+}
+.success {
+  display: none;
+  padding: 2rem;
+  text-align: center;
+  background: #f5f0ff;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.success.show { display: flex; }
+.check { font-size: 60px; margin-bottom: 1rem; }
+.success h2 { font-size: 20px; margin-bottom: 8px; color: #6c3fc5; }
+.success p { font-size: 14px; color: #666; margin-bottom: 1.5rem; }
+.btn-back {
+  background: #6c3fc5;
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.main { display: block; }
+</style>
+</head>
+<body>
+
+<div class="main" id="mainView">
+  <header>
+    <h1>🛍️ GENius Store</h1>
+    <div id="balance-box">
+      <strong id="bal">--</strong>
+      رصيدك
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="filter('all',this)">الكل</button>
+    <button class="tab" onclick="filter('design',this)">تصميم</button>
+    <button class="tab" onclick="filter('ebook',this)">كتب</button>
+    <button class="tab" onclick="filter('tools',this)">أدوات</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-icon" id="mIcon"></div>
+    <div class="modal-name" id="mName"></div>
+    <div class="modal-desc" id="mDesc"></div>
+    <div class="modal-price" id="mPrice"><span>السعر</span></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-confirm" onclick="doPay()">ادفع بـ Pi 🔑</button>
+    </div>
+  </div>
+</div>
+
+<div class="success" id="successView">
+  <div class="check">✅</div>
+  <h2>تم الشراء بنجاح!</h2>
+  <p id="successMsg"></p>
+  <button class="btn-back" onclick="goBack()">العودة للمتجر</button>
+</div>
+
+<script>
+const API_KEY = "w5uqf7njoljp0h7aoy18gd7ws4cp4n0bcyu61r2mck4zxusaphbgynsjfbrrenhz";
+
+const products = [
+  { id:1, cat:'design', icon:'🖼️', name:'حزمة خلفيات 4K', desc:'50 خلفية عالية الجودة', price:2.5, badge:'hot' },
+  { id:2, cat:'design', icon:'🎨', name:'أيقونات UI احترافية', desc:'200 أيقونة SVG قابلة للتعديل', price:5.0, badge:'new' },
+  { id:3, cat:'ebook', icon:'📚', name:'دليل Pi للمبتدئين', desc:'كتاب PDF شامل لشبكة Pi', price:1.5, badge:null },
+  { id:4, cat:'ebook', icon:'💡', name:'تعلم HTML بسرعة', desc:'50 صفحة لتعلم البرمجة', price:3.0, badge:'new' },
+  { id:5, cat:'tools', icon:'⚡', name:'قوالب مواقع جاهزة', desc:'5 قوالب HTML احترافية', price:8.0, badge:'hot' },
+  { id:6, cat:'tools', icon:'🛠️', name:'سكريبتات أتمتة', desc:'10 سكريبتات Python', price:4.5, badge:null },
+];
+
+let currentCat = 'all';
+let currentProduct = null;
+let piUser = null;
+
+Pi.init({ version: "2.0", sandbox: true });
+
+Pi.authenticate(['username', 'payments'], {
+  onIncompletePaymentFound: function(payment) { Pi.currentPayment = payment; }
+}).then(function(auth) {
+  piUser = auth.user;
+  document.getElementById('bal').textContent = piUser.username;
+}).catch(function(err) {
+  document.getElementById('bal').textContent = 'Guest';
+});
+
+function render() {
+  const list = currentCat === 'all' ? products : products.filter(p => p.cat === currentCat);
+  document.getElementById('grid').innerHTML = list.map(p => `
+    <div class="card" onclick="openModal(${p.id})">
+      <div class="thumb">${p.icon}</div>
+      <div class="card-body">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
+          <div class="card-name">${p.name}</div>
+          ${p.badge === 'new' ? '<span class="badge badge-new">جديد</span>' : p.badge === 'hot' ? '<span class="badge badge-hot">رائج</span>' : ''}
+        </div>
+        <div class="card-desc">${p.desc}</div>
+        <div class="card-footer">
+          <span class="price">${p.price} π</span>
+          <button class="btn-buy" onclick="event.stopPropagation();openModal(${p.id})">اشتري</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filter(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function openModal(id) {
+  currentProduct = products.find(p => p.id === id);
+  document.getElementById('mIcon').textContent = currentProduct.icon;
+  document.getElementById('mName').textContent = currentProduct.name;
+  document.getElementById('mDesc').textContent = currentProduct.desc;
+  document.getElementById('mPrice').innerHTML = currentProduct.price + ' π<span>يُخصم من رصيد Pi بتاعك</span>';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  currentProduct = null;
+}
+
+function doPay() {
+  if (!currentProduct) return;
+  const paymentData = {
+    amount: currentProduct.price,
+    memo: 'شراء: ' + currentProduct.name,
+    metadata: { productId: currentProduct.id }
+  };
+  const callbacks = {
+    onReadyForServerApproval: function(paymentId) { console.log('Approve:', paymentId); },
+    onReadyForServerCompletion: function(paymentId, txid) {
+      closeModal();
+      document.getElementById('successMsg').textContent = 'اشتريت "' + currentProduct.name + '" بنجاح!';
+      document.getElementById('mainView').style.display = 'none';
+      document.getElementById('successView').classList.add('show');
+    },
+    onCancel: function(paymentId) { closeModal(); },
+    onError: function(error) { alert('حصل خطأ: ' + error.message); closeModal(); }
+  };
+  Pi.createPayment(paymentData, callbacks);
+}
+
+function goBack() {
+  document.getElementById('successView').classList.remove('show');
+  document.getElementById('mainView').style.display = 'block';
+}
+
+render();
+</script>
+</body>
+</html>
