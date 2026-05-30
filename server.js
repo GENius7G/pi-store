@@ -1,41 +1,44 @@
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use(express.static('.'));
-
-const PI_API_KEY = "w5uqf7njoljp0h7aoy18gd7ws4cp4n0bcyu61r2mck4zxusaphbgynsjfbrrenhz";
-
-app.post('/approve', async (req, res) => {
-  const { paymentId } = req.body;
-  try {
-    await axios.post(
-      `https://api.minepi.com/v2/payments/${paymentId}/approve`,
-      {},
-      { headers: { Authorization: `Key ${PI_API_KEY}` } }
-    );
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-app.post('/complete', async (req, res) => {
-  const { paymentId, txid } = req.body;
-  try {
-    await axios.post(
-      `https://api.minepi.com/v2/payments/${paymentId}/complete`,
-      { txid },
-      { headers: { Authorization: `Key ${PI_API_KEY}` } }
-    );
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'POST' && req.url === '/approve') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ success: true }));
+    });
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/complete') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ success: true }));
+    });
+    return;
+  }
+
+  let filePath = req.url === '/' ? '/index.html' : req.url;
+  filePath = path.join(__dirname, filePath);
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(200, {'Content-Type': 'text/html'});
+      fs.readFile(path.join(__dirname, 'index.html'), (e, d) => {
+        res.end(d || 'Not found');
+      });
+      return;
+    }
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end(data);
+  });
+});
+
+server.listen(PORT, () => console.log('Server running on port ' + PORT));
