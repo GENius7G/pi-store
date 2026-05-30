@@ -5,26 +5,6 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
-  if (req.method === 'POST' && req.url === '/approve') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      res.end(JSON.stringify({ success: true }));
-    });
-    return;
-  }
-
-  if (req.method === 'POST' && req.url === '/complete') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      res.writeHead(200, {'Content-Type': 'application/json'});
-      res.end(JSON.stringify({ success: true }));
-    });
-    return;
-  }
-
   let filePath = req.url === '/' ? '/index.html' : req.url;
   filePath = path.join(__dirname, filePath);
 
